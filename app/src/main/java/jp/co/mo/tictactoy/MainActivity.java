@@ -1,5 +1,7 @@
 package jp.co.mo.tictactoy;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int PLAYER_1_ID = 1;
     private static final int PLAYER_2_ID = PLAYER_1_ID + 1;
+    private static final int NO_PLAYER = -1;
 
     private static final int BTN_ID_1 = 1;
     private static final int BTN_ID_2 = BTN_ID_1 + 1;
@@ -31,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int BTN_ID_8 = BTN_ID_7 + +1;
     private static final int BTN_ID_9 = BTN_ID_8 + +1;
 
-    private int activePlayer = 0; // 1- for first, 2 for second
+    private int activePlayer = NO_PLAYER; // 1- for first, 2 for second
     List<Integer> player1; // hold player 1 data
     List<Integer> player2; // hold player 2 data
 
@@ -51,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void btnClick(View view) {
         Button selectedBtn = (Button) view;
-        int cellId = 0;
+        int cellId = -1;
         switch (selectedBtn.getId()) {
             case R.id.btn1:
                 cellId = BTN_ID_1;
@@ -103,23 +106,48 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkWinner() {
-        int winner = -1;
+        int winner = NO_PLAYER;
         winner = checkWinner(player1, PLAYER_1_ID);
-        if(winner == -1) {
+        if(winner == NO_PLAYER) {
             winner = checkWinner(player2, PLAYER_2_ID);
         }
 
-        if(winner == -1) {
+        if(winner == NO_PLAYER) {
             return;
         }
 
         if(winner == PLAYER_1_ID) {
-            Toast.makeText(this, "Player 1 is winner!", Toast.LENGTH_LONG).show();
-            refleshActivity();
+            showWinnerDialog("Player 1 is winner!");
         } else if (winner == PLAYER_2_ID) {
-            Toast.makeText(this, "Player 2 is winner!", Toast.LENGTH_LONG).show();
-            refleshActivity();
+            showWinnerDialog("Player 2 is winner!");
         }
+    }
+
+    private void showWinnerDialog(String message) {
+        new AlertDialog.Builder(this)
+                .setTitle("WINNER")
+                .setMessage(message)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        refleshActivity();
+                    }
+                })
+                .show();
+    }
+
+    public void restartClick(View view) {
+        new AlertDialog.Builder(view.getContext())
+                .setTitle("ALERT")
+                .setMessage("Do you want to clear this game?")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        refleshActivity();
+                    }
+                })
+                .setNegativeButton("CANCLE", null)
+                .show();
     }
 
     private void refleshActivity() {
@@ -128,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private int checkWinner(List<Integer> player, int playerId) {
-        int winnerId = -1;
+        int winnerId = NO_PLAYER;
         for(int i = 1; i <= MAX_ROW_NUMBER; i++) {
             if (player.contains(i) && player.contains(i + 1) && player.contains(i + 2)) {
                 winnerId = playerId;
