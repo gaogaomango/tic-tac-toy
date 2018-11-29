@@ -6,13 +6,17 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
+
+    private static final int MAX_ROW_NUMBER = 3;
 
     private static final int PLAYER_1_ID = 1;
     private static final int PLAYER_2_ID = PLAYER_1_ID + 1;
@@ -36,10 +40,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
         setContentView(R.layout.activity_main);
-        setElement();
+        initElement();
     }
 
-    private void setElement() {
+    private void initElement() {
         activePlayer = PLAYER_1_ID; // 1- for first, 2 for second
         player1 = new ArrayList<>();
         player2 = new ArrayList<>();
@@ -94,5 +98,51 @@ public class MainActivity extends AppCompatActivity {
             player2.add(cellId);
             activePlayer = PLAYER_1_ID;
         }
+        selectedBtn.setEnabled(false);
+        checkWinner();
     }
+
+    private void checkWinner() {
+        int winner = -1;
+        winner = checkWinner(player1, PLAYER_1_ID);
+        if(winner == -1) {
+            winner = checkWinner(player2, PLAYER_2_ID);
+        }
+
+        if(winner == -1) {
+            return;
+        }
+
+        if(winner == PLAYER_1_ID) {
+            Toast.makeText(this, "Player 1 is winner!", Toast.LENGTH_LONG).show();
+            refleshActivity();
+        } else if (winner == PLAYER_2_ID) {
+            Toast.makeText(this, "Player 2 is winner!", Toast.LENGTH_LONG).show();
+            refleshActivity();
+        }
+    }
+
+    private void refleshActivity() {
+        finish();
+        startActivity(getIntent());
+    }
+
+    private int checkWinner(List<Integer> player, int playerId) {
+        int winnerId = -1;
+        for(int i = 1; i <= MAX_ROW_NUMBER; i++) {
+            if (player.contains(i) && player.contains(i + 1) && player.contains(i + 2)) {
+                winnerId = playerId;
+                break;
+            } else if (player.contains(i) && player.contains(i + MAX_ROW_NUMBER) && player.contains(i + MAX_ROW_NUMBER * 2)) {
+                winnerId = playerId;
+                break;
+            }
+        }
+        if((player.contains(1) && player.contains(5) && player.contains(9))
+            || (player.contains(3) && player.contains(5) && player.contains(7))) {
+            winnerId = playerId;
+        }
+        return winnerId;
+    }
+
 }
