@@ -1,18 +1,24 @@
 package jp.co.mo.tictactoy;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Switch;
 import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,8 +41,11 @@ public class MainActivity extends AppCompatActivity {
     private static final int BTN_ID_9 = BTN_ID_8 + +1;
 
     private int activePlayer = NO_PLAYER; // 1- for first, 2 for second
-    List<Integer> player1; // hold player 1 data
-    List<Integer> player2; // hold player 2 data
+    private List<Integer> player1; // hold player 1 data
+    private List<Integer> player2; // hold player 2 data
+
+    private Switch autoPlayStatusToggle;
+    private ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
         activePlayer = PLAYER_1_ID; // 1- for first, 2 for second
         player1 = new ArrayList<>();
         player2 = new ArrayList<>();
+        autoPlayStatusToggle = findViewById(R.id.autoPlayStatusToggle);
     }
 
     public void btnClick(View view) {
@@ -102,10 +112,22 @@ public class MainActivity extends AppCompatActivity {
             activePlayer = PLAYER_1_ID;
         }
         selectedBtn.setEnabled(false);
-        checkWinner();
+        if(!isFinishedGame()) {
+            // auto playをさせるのはplayer2だけ
+            // auto play modeの場合はちょっとまってからプレイさせる
+            if(activePlayer == PLAYER_2_ID && autoPlayStatusToggle != null && autoPlayStatusToggle.isChecked()) {
+                ProgressDialog progressDialog = new ProgressDialog(this);
+                progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                progressDialog.setMessage("オートプレイを実行しています");
+                progressDialog.setCancelable(true);
+                progressDialog.show();
+
+                new AutoPlay(this, progressDialog).execute();
+            }
+        }
     }
 
-    private void checkWinner() {
+    private boolean isFinishedGame() {
         int winner = NO_PLAYER;
         winner = checkWinner(player1, PLAYER_1_ID);
         if(winner == NO_PLAYER) {
@@ -113,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if(winner == NO_PLAYER) {
-            return;
+            return false;
         }
 
         if(winner == PLAYER_1_ID) {
@@ -121,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (winner == PLAYER_2_ID) {
             showWinnerDialog("Player 2 is winner!");
         }
+        return true;
     }
 
     private void showWinnerDialog(String message) {
@@ -171,6 +194,94 @@ public class MainActivity extends AppCompatActivity {
             winnerId = playerId;
         }
         return winnerId;
+    }
+
+    private void autoPlay() {
+        // auto play modeの場合はちょっとまってからプレイさせる
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        List<Integer> emptyCells = new ArrayList<>(); // all unselected cell
+
+        // Find empty cells;
+        for(int cellId = 1; cellId < 10; cellId++) {
+            if(!(player1.contains(cellId) || player2.contains(cellId))) {
+                emptyCells.add(cellId);
+            }
+        }
+
+        Random r = new Random();
+        int randomIndex = r.nextInt(emptyCells.size() - 0) + 0; // if size =3, select (0,1,2)
+        int cellId = emptyCells.get(randomIndex);
+        Button btnSelected = null;
+        switch (cellId) {
+            case BTN_ID_1:
+                btnSelected = findViewById(R.id.btn1);
+                break;
+            case BTN_ID_2:
+                btnSelected = findViewById(R.id.btn2);
+                break;
+            case BTN_ID_3:
+                btnSelected = findViewById(R.id.btn3);
+                break;
+            case BTN_ID_4:
+                btnSelected = findViewById(R.id.btn4);
+                break;
+            case BTN_ID_5:
+                btnSelected = findViewById(R.id.btn5);
+                break;
+            case BTN_ID_6:
+                btnSelected = findViewById(R.id.btn6);
+                break;
+            case BTN_ID_7:
+                btnSelected = findViewById(R.id.btn7);
+                break;
+            case BTN_ID_8:
+                btnSelected = findViewById(R.id.btn8);
+                break;
+            case BTN_ID_9:
+                btnSelected = findViewById(R.id.btn9);
+                break;
+            default:
+                btnSelected = findViewById(R.id.btn1);
+                break;
+        }
+
+        playGame(cellId, btnSelected);
+    }
+
+    private static class AutoPlay extends AsyncTask<Void, Void, String> {
+        private WeakReference<MainActivity> activityReference;
+        private ProgressDialog mProgressDialog;
+
+        public AutoPlay(MainActivity context, ProgressDialog progressDialog) {
+            this.activityReference = new WeakReference<>(context);
+            this.mProgressDialog = progressDialog;
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            try {
+                // just wait for auto play
+                Thread.sleep(1000);
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            activityReference.get().autoPlay();
+            if(mProgressDialog != null) {
+                mProgressDialog.dismiss();
+                mProgressDialog = null;
+            }
+        }
     }
 
 }

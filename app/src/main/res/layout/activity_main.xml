@@ -114,6 +114,15 @@
         </TableRow>
     </TableLayout>
 
+    <Switch
+        android:id="@+id/autoPlayStatusToggle"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="5pt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:text="Player2 Auto Play Mode" />
+
     <Button
         android:id="@+id/restartBtn"
         android:layout_marginTop="30dp"
@@ -121,4 +130,5 @@
         android:layout_height="wrap_content"
         android:onClick="restartClick"
         android:text="RESTART" />
+
 </LinearLayout>
